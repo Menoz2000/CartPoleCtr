@@ -1,0 +1,3 @@
+[submodule "src/gazebo_polecart_ros"]
+	path = src/gazebo_polecart_ros
+	url = https://github.com/cscribano/gazebo_polecart_ros.git

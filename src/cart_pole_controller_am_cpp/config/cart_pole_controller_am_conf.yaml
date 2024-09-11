@@ -1,0 +1,10 @@
+/cart_pole_controller:
+  ros__parameters:
+    topic:
+      force_topic: "/cart/force"
+      cart_state_topic: "/cart/pole_state"
+    PID:  
+      kp: 75.0
+      ki: 0.075
+      kd: 7.5
+      setpoint: 0.0

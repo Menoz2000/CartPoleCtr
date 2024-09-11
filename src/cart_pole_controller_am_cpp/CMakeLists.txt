@@ -28,8 +28,21 @@ endif()
 # questa parte dice a colcon di compilare l'eseguibile e di installarlo nella directory corretta
 add_executable(cart_pole_controller_am src/cart_pole_controller_am.cpp)
 ament_target_dependencies(cart_pole_controller_am rclcpp sensor_msgs geometry_msgs std_srvs)
+
 install(TARGETS cart_pole_controller_am
   DESTINATION lib/${PROJECT_NAME})
+
+# Install launch directory
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Install config directory
+install(DIRECTORY
+  config
+  DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()
 

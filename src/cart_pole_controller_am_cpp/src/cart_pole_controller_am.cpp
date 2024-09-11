@@ -11,17 +11,19 @@ using namespace std::chrono_literals;       //per usare suffissi temporali come 
 class CartPoleController : public rclcpp::Node {
 public:
     //inizializzo i parametri PID e le var per il controllo. nomino il nodo "cart_pole_controller"
-    CartPoleController() : Node("cart_pole_controller"), kp_(75.0), ki_(0.075), kd_(7.5), setpoint_(0.0), integral_(0.0), previous_error_(0.0) {
+    CartPoleController() : Node("cart_pole_controller") {
         
+        this->loadParameters();
+
         // Imposta il nodo per usare il tempo simulato, sincronizzando il nodo con il tempo gazebo
         this->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
         // Creo un publisher che pubblica messaggi di tipo Wrench sul topic "/cart/force" con  una coda di 10 messaggi
-        force_publisher_ = this->create_publisher<geometry_msgs::msg::Wrench>("/cart/force", 10);
+        force_publisher_ = this->create_publisher<geometry_msgs::msg::Wrench>(this->force_topic, 10);
         
         // Creo un subscriber che si iscrive al topic "/cart/pole_state" per ricevere messaggi tipo JointState, rappresentanti lo stato del pendolo. il callback associato è poleStateCallback
         pole_state_subscriber_ = this->create_subscription<sensor_msgs::msg::JointState>(
-            "/cart/pole_state", 10, std::bind(&CartPoleController::poleStateCallback, this, std::placeholders::_1));
+            this->cart_pole_state_topic, 10, std::bind(&CartPoleController::poleStateCallback, this, std::placeholders::_1));
         
         // crea un client che chiama il servizio /reset_simulation per resettare la simulazione
         reset_client_ = this->create_client<std_srvs::srv::Empty>("/reset_simulation");
@@ -48,6 +50,26 @@ private:
         } else {
             RCLCPP_WARN(this->get_logger(), "Dati di posizione del pendolo vuoti.");
         }
+    }
+
+    void loadParameters() {
+        this->declare_parameter("topic.force_topic", "");
+        this->get_parameter("topic.force_topic", this->force_topic);
+
+        this->declare_parameter("topic.cart_state_topic", "");
+        this->get_parameter("topic.cart_state_topic", this->cart_pole_state_topic);
+
+        this->declare_parameter("PID.kp", 0.0);
+        this->get_parameter("PID.kp", this->kp_);
+
+        this->declare_parameter("PID.ki", 0.0);
+        this->get_parameter("PID.ki", this->ki_);
+
+        this->declare_parameter("PID.kd", 0.0);
+        this->get_parameter("PID.kd", this->kd_);
+
+        this->declare_parameter("PID.setpoint", 0.0);
+        this->get_parameter("PID.setpoint", this->setpoint_);
     }
 
     /*
@@ -99,9 +121,13 @@ private:
 
 
     // Parametri del controllore PID
-    double kp_, ki_, kd_;       // Coefficienti del controllo PID
-    double setpoint_;           //Valore target (l'angolo desiderato del pendolo)
-    double integral_, previous_error_;  // Memorizzanpo la parte integrale e l'errore precedente per il calcolo PID
+    double kp_, ki_, kd_, setpoint_;       // Coefficienti del controllo PID
+
+    // Valore target (l'angolo desiderato del pendolo)
+    // Memorizzano la parte integrale e l'errore precedente per il calcolo PID
+    double integral_ = 0.0, previous_error_ = 0.0;
+
+    std::string force_topic, cart_pole_state_topic;
 
     // Tempo e stato
     rclcpp::Time last_time_;        // Tiene traccia dell'ultimo tempo di esecuzione

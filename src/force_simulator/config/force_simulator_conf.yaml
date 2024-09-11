@@ -1,0 +1,11 @@
+/force_simulator_node:
+  ros__parameters:
+    force_bound:
+       upper_bound: 120.0
+       lower_bound: 60.0
+
+    ros_timer:
+      period: 3000 # ms
+
+    topic:
+      force_topic: "/cart/force"

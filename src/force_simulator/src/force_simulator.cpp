@@ -61,6 +61,9 @@ class ForceSimulator : public rclcpp::Node{
                                   * (random() % max_rand)
                                   / max_rand;
 
+      RCLCPP_INFO(this->get_logger(),"Force generated: %lf", random_double);
+      
+
       return random_double;
     }
 

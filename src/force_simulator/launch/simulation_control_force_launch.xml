@@ -1,0 +1,12 @@
+<launch>
+    <!-- Lancio il primo nodo con configurazione YAML -->
+    <node pkg="cart_pole_controller_am_cpp" exec="cart_pole_controller_am">
+        <param from="$(find-pkg-share cart_pole_controller_am_cpp)/config/cart_pole_controller_am_conf.yaml" />
+    </node>
+
+    <!-- Lancio il secondo nodo con configurazione YAML -->
+    <node pkg="force_simulator" exec="force_simulator">
+        <param from="$(find-pkg-share force_simulator)/config/force_simulator_conf.yaml" />
+    </node>
+
+</launch>

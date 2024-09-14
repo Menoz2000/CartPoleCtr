@@ -2,20 +2,20 @@
 #include <cmath>
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/joint_state.hpp>  //per lo stato del pendolo
-#include <geometry_msgs/msg/wrench.hpp>     //per applicare forze
+#include <sensor_msgs/msg/joint_state.hpp>  // Per lo stato del pendolo
+#include <geometry_msgs/msg/wrench.hpp>     // Per applicare forze
 #include <std_srvs/srv/empty.hpp>
 
-using namespace std::chrono_literals;       //per usare suffissi temporali come 50ms per 50 millisecondi
+using namespace std::chrono_literals;       // Per usare suffissi temporali come 50ms per 50 millisecondi
 
 class CartPoleController : public rclcpp::Node {
 public:
-    //inizializzo i parametri PID e le var per il controllo. nomino il nodo "cart_pole_controller"
+    // Inizializzo i parametri PID e le var per il controllo. nomino il nodo "cart_pole_controller"
     CartPoleController() : Node("cart_pole_controller") {
         
         this->loadParameters();
 
-        // Imposta il nodo per usare il tempo simulato, sincronizzando il nodo con il tempo gazebo
+        // Imposto il nodo per usare il tempo simulato, sincronizzando il nodo con il tempo gazebo
         this->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
         // Creo un publisher che pubblica messaggi di tipo Wrench sul topic "/cart/force" con  una coda di 10 messaggi
@@ -25,13 +25,13 @@ public:
         pole_state_subscriber_ = this->create_subscription<sensor_msgs::msg::JointState>(
             this->cart_pole_state_topic, 10, std::bind(&CartPoleController::poleStateCallback, this, std::placeholders::_1));
         
-        // crea un client che chiama il servizio /reset_simulation per resettare la simulazione
+        // Creo un client che chiama il servizio /reset_simulation per resettare la simulazione
         reset_client_ = this->create_client<std_srvs::srv::Empty>("/reset_simulation");
 
-        // Crea un timer che chiama la funzione controlLoop ogni 50ms eseguendo il ciclo di controllo PID
+        // Creo un timer che chiama la funzione controlLoop ogni 50ms eseguendo il ciclo di controllo PID
         control_timer_ = this->create_wall_timer(50ms, std::bind(&CartPoleController::controlLoop, this));
         
-        // Inizializza il tempo corrente utilizzando il clock del nodo
+        // Inizializzo il tempo corrente utilizzando il clock del nodo
         last_time_ = this->get_clock()->now();
         
         // Al termine della costruzione del nodo chiamo la funzione che resetta la simulazione
@@ -40,13 +40,14 @@ public:
 
 private:
     /*
-    la funzione poleStateCallback viene chiamata quando si riceve un messaggio sul topic "/cart/pole_state". estrae la posizione del 
-    pendolo (l'angolo) e lo memorizza nella variabile pole_angle_. se i dati sono vuoti, viene registrato un avviso
+    la funzione poleStateCallback viene chiamata quando si riceve un messaggio sul topic "/cart/pole_state". 
+    Estrae la posizione del pendolo (l'angolo) e lo memorizza nella variabile pole_angle_. 
+    Se i dati sono vuoti, viene registrato un avviso
     */
     void poleStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg) {
         if (!msg->position.empty()) {
             pole_angle_ = msg->position[0];
-            RCLCPP_INFO(this->get_logger(), "Angolo del pendolo ricevuto: %f", pole_angle_);
+            // RCLCPP_INFO(this->get_logger(), "Angolo del pendolo ricevuto: %f", pole_angle_);
         } else {
             RCLCPP_WARN(this->get_logger(), "Dati di posizione del pendolo vuoti.");
         }
@@ -78,14 +79,14 @@ private:
     dopo il reset, pubblica una forza zero per fermare il carrello
     */
     void resetSimulation() {
-        // Richiede il reset del simulatore
+        // Richiedo il reset del simulatore
         auto request = std::make_shared<std_srvs::srv::Empty::Request>();
         while (!reset_client_->wait_for_service(1s)) {
             RCLCPP_WARN(this->get_logger(), "In attesa che il servizio /reset_simulation sia disponibile...");
         }
         reset_client_->async_send_request(request);
         
-        // Applica una forza di 0.0 per fermare il carrello
+        // Applico una forza di 0.0 per fermare il carrello
         auto stop_msg = geometry_msgs::msg::Wrench();
         stop_msg.force.y = 0.0;
         force_publisher_->publish(stop_msg);
@@ -105,23 +106,23 @@ private:
         last_time_ = current_time;
 
         // Calcolo del PID
-        double error = setpoint_ - pole_angle_;         //errore tra angolo desiderato del pendolo e angolo attuale
-        integral_ += error * dt;                        //aggiorna la parte integrale
-        double derivative = (error - previous_error_) / dt; //calcola la derivata dell'errore
-        double control_signal = kp_ * error + ki_ * integral_ + kd_ * derivative;   //calcola il segnale PID
+        double error = setpoint_ - pole_angle_;         // Errore tra angolo desiderato del pendolo e angolo attuale
+        integral_ += error * dt;                        // Aggiorno la parte integrale
+        double derivative = (error - previous_error_) / dt; // Calcolo la derivata dell'errore
+        double control_signal = kp_ * error + ki_ * integral_ + kd_ * derivative;   // Calcolo il segnale PID
         previous_error_ = error;
 
-        // Pubblica la forza calcolata
+        // Pubblico la forza calcolata
         auto force_msg = geometry_msgs::msg::Wrench();
-        force_msg.force.y = control_signal;  // Applica la forza lungo l'asse Y
+        force_msg.force.y = control_signal;  // Applico la forza lungo l'asse Y
         force_publisher_->publish(force_msg);
 
-        RCLCPP_INFO(this->get_logger(), "Position err: %f, Forza applicata: %f", error, control_signal);
+        // RCLCPP_INFO(this->get_logger(), "Position err: %f, Forza applicata: %f", error, control_signal);
     }
 
 
     // Parametri del controllore PID
-    double kp_, ki_, kd_, setpoint_;       // Coefficienti del controllo PID
+    double kp_, ki_, kd_, setpoint_;
 
     // Valore target (l'angolo desiderato del pendolo)
     // Memorizzano la parte integrale e l'errore precedente per il calcolo PID
@@ -144,6 +145,6 @@ private:
 int main(int argc, char * argv[]) {
     rclcpp::init(argc, argv);                               // Inizializza l'ambiente ROS
     rclcpp::spin(std::make_shared<CartPoleController>());   // Esegue il nodo CartPoleController, mantenendolo attivo e ascoltando per messaggi
-    rclcpp::shutdown();                                     // Chiude ROS2 al termina
+    rclcpp::shutdown();                                     // Chiude ROS2 al termine
     return 0;
 }

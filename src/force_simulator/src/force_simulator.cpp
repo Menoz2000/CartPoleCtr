@@ -9,15 +9,18 @@ using namespace std::chrono_literals;       //per usare suffissi temporali come 
 
 class ForceSimulator : public rclcpp::Node{
   public:
+    // Nome del nodo
     ForceSimulator() : Node("force_simulator_node"){
       
       this->loadParameters();
 
+      // Creo un timer che chiama la funzione timerCb a intervalli definiti dalla variabile timer_period
       timer_ = this->create_wall_timer(
         std::chrono::milliseconds(this->timer_period),
         std::bind(&ForceSimulator::timerCb, this)
       );
 
+      // Creo un publiser che pubblica messaggi di tipo Wrench sul topic "/cart/force" con una coda di 10 messaggi
       force_publisher_ = this->create_publisher<geometry_msgs::msg::Wrench>(this->force_topic, 10);
 
 
@@ -25,6 +28,7 @@ class ForceSimulator : public rclcpp::Node{
   private:
 
     void loadParameters() {
+        // carico i parametri dal file di config
         this->declare_parameter("force_bound.upper_bound", 50.0);
         this->get_parameter("force_bound.upper_bound", this->upper_bound);
 

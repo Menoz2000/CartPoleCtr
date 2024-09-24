@@ -10,7 +10,7 @@ using namespace std::chrono_literals;       // Per usare suffissi temporali come
 
 class CartPoleController : public rclcpp::Node {
 public:
-    // Inizializzo i parametri PID e le var per il controllo. nomino il nodo "cart_pole_controller"
+    // Nomino il nodo "cart_pole_controller"
     CartPoleController() : Node("cart_pole_controller") {
         
         this->loadParameters();

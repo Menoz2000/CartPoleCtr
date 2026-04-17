@@ -4,7 +4,7 @@ Un progetto basato su **ROS 2** e **Gazebo** per la simulazione e il controllo d
 
 Il progetto integra un ambiente fisico simulato in Gazebo, un nodo per l'applicazione delle forze (Force Simulator) e un nodo di controllo sviluppato in C++ per bilanciare il pendolo.
 
-## 🛠️ Tecnologie Utilizzate
+## Tecnologie Utilizzate
 - **Linguaggi:** C++, CMake, Python
 - **Middleware:** ROS 2
 - **Simulatore:** Gazebo
